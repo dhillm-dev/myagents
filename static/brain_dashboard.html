@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global Agent Hub — Brain Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #0b0e11; color: #e6edf3; }
+    h1 { margin-bottom: 8px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card { background: #12161c; border: 1px solid #1f2329; border-radius: 8px; padding: 12px; }
+    .title { font-weight: 600; margin-bottom: 6px; }
+    .value { font-size: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #1f2329; padding: 6px; text-align: left; }
+    .ok { color: #1db954; }
+    .warn { color: #f59e0b; }
+    .bad { color: #ef4444; }
+    .small { font-size: 12px; color: #9aa4ad; }
+  </style>
+</head>
+<body>
+  <h1>Global Agent Hub — Brain Dashboard</h1>
+  <div class="small">Live: FlowGuard spread, AlphaHunter picks, RS leaders, sentiment curve, risk.</div>
+
+  <div class="grid" id="metrics">
+    <div class="card"><div class="title">Sharpe</div><div class="value" id="sharpe">–</div></div>
+    <div class="card"><div class="title">Hit Rate</div><div class="value" id="hit">–</div></div>
+    <div class="card"><div class="title">Drawdown</div><div class="value" id="dd">–</div></div>
+  </div>
+
+  <div class="grid" style="margin-top: 16px">
+    <div class="card" style="grid-column: span 2;">
+      <div class="title">Active Agents & Confidence</div>
+      <table id="agents"><thead><tr><th>Agent</th><th>Confidence</th><th>Status</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <div class="title">FlowGuard Snapshot</div>
+      <div>Symbol: <input id="flowSymbol" value="BTC-USD" /> <button onclick="loadFlow()">Update</button></div>
+      <div class="small">Tighter spreads, lower vol → higher score</div>
+      <table><tbody>
+        <tr><td>Spread</td><td id="spread">–</td></tr>
+        <tr><td>Imbalance</td><td id="imbalance">–</td></tr>
+        <tr><td>Volatility</td><td id="volatility">–</td></tr>
+        <tr><td>Score</td><td id="score">–</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <script>
+    async function loadBrain() {
+      const res = await fetch('/brain/status');
+      const data = await res.json();
+      const m = data.computed || {};
+      document.getElementById('sharpe').textContent = (m.sharpe ?? 0).toFixed(3);
+      document.getElementById('hit').textContent = ((m.hit_rate ?? 0) * 100).toFixed(1) + '%';
+      document.getElementById('dd').textContent = ((m.drawdown ?? 0) * 100).toFixed(2) + '%';
+
+      const tbody = document.querySelector('#agents tbody');
+      tbody.innerHTML = '';
+      const agents = data.status?.agents || data.agents || {};
+      const conf = data.status?.weights || data.weights || {};
+      Object.keys(conf).forEach(k => {
+        const tr = document.createElement('tr');
+        const c = (conf[k] ?? 0).toFixed(2);
+        tr.innerHTML = `<td>${k}</td><td>${c}</td><td class="ok">active</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadFlow() {
+      const sym = document.getElementById('flowSymbol').value;
+      const res = await fetch(`/flow/snapshot?symbol=${encodeURIComponent(sym)}`);
+      const d = await res.json();
+      const fmt = (v) => (v === null || v === undefined) ? '–' : Number(v).toFixed(4);
+      document.getElementById('spread').textContent = fmt(d.spread);
+      document.getElementById('imbalance').textContent = fmt(d.imbalance);
+      document.getElementById('volatility').textContent = fmt(d.volatility);
+      document.getElementById('score').textContent = fmt(d.score);
+    }
+
+    loadBrain();
+    loadFlow();
+    setInterval(loadBrain, 8000);
+    setInterval(loadFlow, 5000);
+  </script>
+</body>
+</html>

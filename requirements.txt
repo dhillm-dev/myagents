@@ -1,0 +1,53 @@
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Async HTTP Client
+httpx==0.25.2
+aiohttp==3.9.1
+
+# Data Processing & Analysis
+pandas==2.1.4
+numpy==1.25.2
+ta-lib==0.4.28
+talib-binary==0.4.19
+
+# Market Data
+ccxt==4.1.64
+yfinance==0.2.28
+
+# Redis & Messaging
+redis==5.0.1
+aioredis==2.0.1
+
+# MetaTrader5 Integration
+MetaTrader5==5.0.45
+
+# AI & ML
+scikit-learn==1.3.2
+scipy==1.11.4
+
+# Logging & Monitoring
+structlog==23.2.0
+python-json-logger==2.0.7
+
+# Environment & Config
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Security
+cryptography==41.0.8
+passlib[bcrypt]==1.7.4
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+schedule==1.2.0
+
+# Development & Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0

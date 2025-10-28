@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowGuard Panel</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #0b0e11; color: #e6edf3; }
+    .card { background: #12161c; border: 1px solid #1f2329; border-radius: 8px; padding: 12px; max-width: 600px; }
+    .title { font-weight: 600; margin-bottom: 6px; }
+    canvas { width: 100%; height: 200px; background: #0f141a; border: 1px solid #1f2329; }
+    .row { display: flex; gap: 12px; align-items: center; }
+    .small { font-size: 12px; color: #9aa4ad; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">Live Spread / Imbalance</div>
+    <div class="row">Symbol: <input id="sym" value="BTC-USD" /> <button onclick="refresh()">Refresh</button></div>
+    <div class="small">Lower spread and lower imbalance indicates healthier flow.</div>
+    <canvas id="chart"></canvas>
+    <div class="row"><div>Spread: <span id="sp">–</span></div><div>Imbalance: <span id="im">–</span></div><div>Score: <span id="sc">–</span></div></div>
+  </div>
+
+  <script>
+    const points = [];
+    function draw() {
+      const c = document.getElementById('chart');
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0,0,c.width,c.height);
+      ctx.strokeStyle = '#1db954';
+      ctx.beginPath();
+      const max = Math.max(0.01, ...points.map(p => p.score));
+      points.forEach((p,i) => {
+        const x = (i / Math.max(1, points.length-1)) * c.width;
+        const y = c.height - (p.score / max) * c.height;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+    }
+    async function refresh() {
+      const sym = document.getElementById('sym').value;
+      const r = await fetch(`/flow/snapshot?symbol=${encodeURIComponent(sym)}`);
+      const d = await r.json();
+      points.push({ t: Date.now(), score: Number(d.score||0) });
+      if(points.length > 120) points.shift();
+      document.getElementById('sp').textContent = Number(d.spread||0).toFixed(4);
+      document.getElementById('im').textContent = Number(d.imbalance||0).toFixed(4);
+      document.getElementById('sc').textContent = Number(d.score||0).toFixed(4);
+      draw();
+    }
+    setInterval(refresh, 3000);
+    refresh();
+  </script>
+</body>
+</html>
