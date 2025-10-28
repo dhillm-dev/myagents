@@ -12,7 +12,6 @@ aiohttp==3.9.1
 pandas==2.1.4
 numpy==1.25.2
 ta-lib==0.4.28
-talib-binary==0.4.19
 
 # Market Data
 ccxt==4.1.64
